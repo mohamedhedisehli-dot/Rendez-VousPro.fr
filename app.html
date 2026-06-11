@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>rendezvouPro — Prenez RDV avec les professionnels près de chez vous</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --green:#0F6E56;--green-light:#E1F5EE;--green-mid:#1D9E75;--green-dark:#085041;
+    --gray-100:#F8F8F6;--gray-200:#EEECEA;--gray-300:#D3D1C7;--gray-500:#888780;--gray-700:#444441;
+    --radius-sm:8px;--radius-md:12px;--radius-lg:16px;
+    --text:#1a1a18;--text-sub:#666460;--text-hint:#999895;
+    --border:#e0ddd8;
+  }
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--text);background:#fff;font-size:15px;line-height:1.5}
+  .screen{display:none}
+  .screen.active{display:block}
+
+  /* NAV */
+  .nav{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:#fff;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+  .logo{font-size:20px;font-weight:600;color:var(--green);letter-spacing:-0.5px}
+  .logo span{color:var(--text)}
+  .nav-actions{display:flex;gap:8px}
+  .btn{padding:8px 18px;border-radius:30px;font-size:14px;cursor:pointer;border:1px solid var(--border);background:#fff;color:var(--text);font-weight:500;transition:all 0.15s}
+  .btn:hover{background:var(--gray-100)}
+  .btn-primary{background:var(--green);color:#fff;border-color:var(--green)}
+  .btn-primary:hover{background:#0d5e49}
+  .back-btn{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--text-sub);cursor:pointer;padding:6px 0;margin-bottom:20px;background:none;border:none;font-family:inherit}
+  .back-btn:hover{color:var(--text)}
+
+  /* HERO */
+  .hero{background:linear-gradient(160deg,#e8f7f1 0%,#f5fdf9 60%,#fff 100%);padding:52px 20px 40px;text-align:center}
+  .hero h1{font-size:32px;font-weight:700;line-height:1.2;margin-bottom:12px;letter-spacing:-0.5px}
+  .hero h1 span{color:var(--green)}
+  .hero p{font-size:16px;color:var(--text-sub);margin-bottom:28px}
+  .search-wrap{max-width:600px;margin:0 auto}
+  .search-box{display:flex;align-items:center;background:#fff;border:1.5px solid var(--border);border-radius:50px;padding:6px 6px 6px 18px;gap:10px;box-shadow:0 2px 12px rgba(0,0,0,0.06)}
+  .search-box input{flex:1;border:none;outline:none;font-size:15px;color:var(--text);background:transparent}
+  .search-box input::placeholder{color:var(--text-hint)}
+  .loc-pill{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--green);cursor:pointer;padding:6px 12px;border-radius:30px;border:1px solid #b5e3d0;background:#f0faf6;white-space:nowrap;transition:all 0.15s}
+  .loc-pill:hover{background:#ddf3ea}
+  .search-btn{background:var(--green);color:#fff;border:none;padding:10px 22px;border-radius:30px;font-size:15px;cursor:pointer;font-weight:500;transition:all 0.15s}
+  .search-btn:hover{background:#0d5e49}
+
+  /* TRUST BAR */
+  .trust-bar{display:flex;justify-content:center;gap:32px;padding:20px;border-bottom:1px solid var(--gray-200);flex-wrap:wrap}
+  .trust-item{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-sub)}
+  .trust-item strong{color:var(--text)}
+
+  /* SECTORS */
+  .section{padding:32px 20px}
+  .section-title{font-size:20px;font-weight:600;margin-bottom:6px}
+  .section-sub{font-size:14px;color:var(--text-sub);margin-bottom:20px}
+  .sectors-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px}
+  .sector-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-md);padding:18px 12px;text-align:center;cursor:pointer;transition:all 0.15s}
+  .sector-card:hover{border-color:var(--green-mid);transform:translateY(-2px);box-shadow:0 4px 16px rgba(15,110,86,0.1)}
+  .sector-icon{font-size:28px;display:block;margin-bottom:8px}
+  .sector-label{font-size:13px;font-weight:500;color:var(--text)}
+  .sector-count-badge{font-size:11px;color:var(--text-hint);margin-top:3px}
+
+  /* RESULTS */
+  .results-header{padding:16px 20px;border-bottom:1px solid var(--border);background:var(--gray-100)}
+  .breadcrumb{font-size:13px;color:var(--text-sub);margin-bottom:10px}
+  .breadcrumb span{color:var(--text);font-weight:500}
+  .subsectors-scroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px}
+  .subsectors-scroll::-webkit-scrollbar{display:none}
+  .sub-chip{font-size:13px;padding:6px 14px;border-radius:30px;border:1px solid var(--border);cursor:pointer;color:var(--text-sub);background:#fff;white-space:nowrap;transition:all 0.15s;flex-shrink:0}
+  .sub-chip.active{background:var(--green-light);color:var(--green);border-color:var(--green-mid);font-weight:500}
+  .sub-chip:hover:not(.active){border-color:var(--gray-300)}
+  .tabs-row{display:flex;gap:4px;background:var(--gray-200);border-radius:var(--radius-sm);padding:4px;width:fit-content}
+  .tab{padding:6px 16px;border-radius:6px;font-size:13px;cursor:pointer;color:var(--text-sub);transition:all 0.15s}
+  .tab.active{background:#fff;color:var(--text);font-weight:500;box-shadow:0 1px 3px rgba(0,0,0,0.08)}
+  .results-list{padding:16px 20px;display:flex;flex-direction:column;gap:14px}
+  .pro-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-md);padding:16px;cursor:pointer;transition:all 0.15s}
+  .pro-card:hover{border-color:var(--green-mid);box-shadow:0 3px 12px rgba(0,0,0,0.06)}
+  .pro-card-top{display:flex;gap:14px;align-items:flex-start}
+  .pro-avatar{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+  .pro-name{font-size:16px;font-weight:600;margin-bottom:3px}
+  .pro-spec{font-size:13px;color:var(--text-sub)}
+  .pro-meta{display:flex;gap:14px;margin-top:8px;flex-wrap:wrap}
+  .meta-item{font-size:13px;color:var(--text-sub);display:flex;align-items:center;gap:4px}
+  .meta-item.green{color:var(--green);font-weight:500}
+  .meta-item.amber{color:#BA7517;font-weight:500}
+  .badge{display:inline-flex;align-items:center;font-size:11px;padding:3px 8px;border-radius:20px;font-weight:500}
+  .badge-verified{background:var(--green-light);color:var(--green-dark)}
+  .badge-unregistered{background:var(--gray-200);color:var(--gray-700)}
+  .dispo-row{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+  .slot{font-size:13px;padding:6px 12px;border-radius:var(--radius-sm);border:1px solid var(--green-mid);color:var(--green);cursor:pointer;background:#fff;transition:all 0.15s}
+  .slot:hover{background:var(--green-light)}
+  .slot.full{border-color:var(--border);color:var(--text-hint);cursor:default;text-decoration:line-through}
+  .tel-line{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px}
+  .tel-link{color:var(--green);font-weight:500;text-decoration:none}
+  .hours-text{color:var(--text-sub)}
+
+  /* PRO DETAIL */
+  .pro-detail-wrap{padding:20px}
+  .pro-detail-header{display:flex;gap:16px;padding:20px;background:#fff;border:1px solid var(--border);border-radius:var(--radius-md);margin-bottom:16px}
+  .pro-detail-avatar{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0}
+  .pro-detail-name{font-size:20px;font-weight:700;margin-bottom:4px}
+  .pro-detail-spec{font-size:14px;color:var(--text-sub);margin-bottom:10px}
+  .info-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;margin-bottom:16px}
+  .info-row{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);font-size:14px}
+  .info-row:last-child{border-bottom:none}
+  .info-label{color:var(--text-sub)}
+  .info-value{color:var(--text);text-align:right;font-weight:500}
+  .info-value.green{color:var(--green)}
+  .map-block{background:var(--green-light);border:1px solid #b5e3d0;border-radius:var(--radius-md);height:160px;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--green-dark);margin-bottom:20px;gap:8px}
+  .section-h{font-size:17px;font-weight:600;margin-bottom:6px}
+  .section-sh{font-size:13px;color:var(--text-sub);margin-bottom:16px}
+  .calendar-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .cal-arrow{width:34px;height:34px;border:1px solid var(--border);border-radius:var(--radius-sm);background:#fff;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;color:var(--text);transition:all 0.15s}
+  .cal-arrow:hover{background:var(--gray-100)}
+  .cal-label{font-size:15px;font-weight:500}
+  .time-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px}
+  .time-slot{padding:11px 6px;text-align:center;border-radius:var(--radius-sm);border:1px solid var(--green-mid);font-size:14px;cursor:pointer;color:var(--green);transition:all 0.15s;font-weight:500}
+  .time-slot:hover{background:var(--green-light)}
+  .time-slot.taken{border-color:var(--border);color:var(--text-hint);cursor:not-allowed;font-weight:400}
+  .time-slot.selected{background:var(--green);color:#fff;border-color:var(--green)}
+  .confirm-banner{background:var(--green-light);border:1px solid #9FE1CB;border-radius:var(--radius-sm);padding:12px 16px;font-size:14px;color:var(--green-dark);margin-bottom:14px;display:none}
+  .confirm-btn{width:100%;background:var(--green);color:#fff;border:none;padding:15px;border-radius:var(--radius-md);font-size:16px;cursor:pointer;font-weight:600;transition:all 0.15s;margin-top:6px}
+  .confirm-btn:hover{background:#0d5e49}
+
+  /* CONFIRM PAGE */
+  .form-label{font-size:13px;color:var(--text-sub);margin-bottom:6px;display:block}
+  .form-input{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:15px;color:var(--text);outline:none;background:#fff;transition:border-color 0.15s;font-family:inherit}
+  .form-input:focus{border-color:var(--green-mid)}
+  .form-group{margin-bottom:14px}
+  .info-banner{background:var(--green-light);border-radius:var(--radius-sm);padding:12px 16px;font-size:13px;color:var(--green-dark);line-height:1.6}
+
+  /* SUCCESS */
+  .success-wrap{text-align:center;padding:60px 20px}
+  .success-icon{width:80px;height:80px;background:var(--green-light);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;font-size:36px}
+  .success-title{font-size:24px;font-weight:700;color:var(--green-dark);margin-bottom:8px}
+  .success-sub{font-size:15px;color:var(--text-sub);margin-bottom:28px}
+
+  /* PRO DASHBOARD */
+  .dashboard-wrap{padding:20px}
+  .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px}
+  .stat-card{background:var(--gray-100);border-radius:var(--radius-sm);padding:14px;text-align:center}
+  .stat-n{font-size:26px;font-weight:700}
+  .stat-l{font-size:12px;color:var(--text-sub);margin-top:3px}
+  .rdv-item{background:#fff;border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .rdv-time{font-weight:600;font-size:14px;margin-bottom:3px}
+  .rdv-name{font-size:13px;color:var(--text-sub)}
+  .status-pill{font-size:12px;padding:4px 10px;border-radius:20px;font-weight:500}
+  .status-ok{background:var(--green-light);color:var(--green-dark)}
+  .status-wait{background:#FAEEDA;color:#633806}
+  .param-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);font-size:14px}
+  .counter{display:flex;align-items:center;gap:12px}
+  .cnt-btn{width:28px;height:28px;border:1px solid var(--border);border-radius:6px;background:#fff;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;color:var(--text)}
+  .cnt-val{font-weight:600;min-width:24px;text-align:center}
+
+  /* SEGMENTATION */
+  .seg-wrap{padding:20px}
+  .search-seg{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;outline:none;font-family:inherit;margin-bottom:14px;background:#fff;color:var(--text)}
+  .search-seg:focus{border-color:var(--green-mid)}
+  .seg-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px}
+  .seg-block{border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;margin-bottom:10px}
+  .seg-header{display:flex;align-items:center;gap:10px;padding:14px 16px;cursor:pointer;background:#fff;user-select:none;transition:background 0.15s}
+  .seg-header:hover{background:var(--gray-100)}
+  .seg-icon{width:36px;height:36px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+  .seg-name{font-size:15px;font-weight:600;flex:1}
+  .seg-count{font-size:12px;padding:3px 10px;border-radius:20px;font-weight:500}
+  .chevron{font-size:13px;color:var(--text-hint);transition:transform 0.2s}
+  .chevron.open{transform:rotate(90deg)}
+  .subsectors-panel{display:none;padding:0 16px 14px;border-top:1px solid var(--border);background:var(--gray-100)}
+  .subsectors-panel.open{display:block}
+  .sub-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px;margin-top:12px}
+  .sub-pill{font-size:13px;padding:6px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);color:var(--text-sub);background:#fff;cursor:pointer;transition:all 0.15s}
+  .sub-pill:hover{border-color:var(--green-mid);color:var(--text)}
+  .sub-pill.hl{border-color:var(--green-mid);color:var(--green);background:var(--green-light)}
+
+  /* REGISTER */
+  .register-wrap{padding:20px;max-width:520px;margin:0 auto}
+  .reg-tabs{display:flex;gap:4px;background:var(--gray-200);border-radius:var(--radius-sm);padding:4px;margin-bottom:24px}
+  .reg-tab{flex:1;text-align:center;padding:9px;border-radius:6px;font-size:14px;cursor:pointer;color:var(--text-sub);transition:all 0.15s}
+  .reg-tab.active{background:#fff;color:var(--text);font-weight:500;box-shadow:0 1px 3px rgba(0,0,0,0.08)}
+
+  @media(max-width:600px){
+    .hero h1{font-size:24px}
+    .sectors-grid{grid-template-columns:repeat(3,1fr)}
+    .time-grid{grid-template-columns:repeat(3,1fr)}
+    .trust-bar{gap:16px}
+    .search-box{flex-wrap:wrap;border-radius:var(--radius-md)}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== HOME ===== -->
+<div id="screen-home" class="screen active">
+  <nav class="nav">
+    <div class="logo">rendez<span>Pro</span></div>
+    <div class="nav-actions">
+      <button class="btn" onclick="go('screen-pro-login')">Espace pro</button>
+      <button class="btn btn-primary" onclick="go('screen-register')">S'inscrire</button>
+    </div>
+  </nav>
+  <div class="hero">
+    <h1>Trouvez un professionnel<br><span>près de chez vous</span></h1>
+    <p>Prenez rendez-vous en ligne 24h/24 ou appelez directement</p>
+    <div class="search-wrap">
+      <div class="search-box">
+        <span style="font-size:18px">🔍</span>
+        <input type="text" id="home-search" placeholder="Médecin, garagiste, coiffeur..."/>
+        <div class="loc-pill" onclick="useLocation()">
+          <span style="font-size:14px">📍</span>
+          <span id="loc-label">Ma position</span>
+        </div>
+        <button class="search-btn" onclick="go('screen-results')">Rechercher</button>
+      </div>
+    </div>
+  </div>
+  <div class="trust-bar">
+    <div class="trust-item"><span>✅</span><span><strong>120 000+</strong> professionnels référencés</span></div>
+    <div class="trust-item"><span>📅</span><span><strong>Prise de RDV</strong> en ligne instantanée</span></div>
+    <div class="trust-item"><span>📍</span><span><strong>Géolocalisation</strong> automatique</span></div>
+    <div class="trust-item"><span>🔔</span><span><strong>Rappel SMS</strong> 24h avant</span></div>
+  </div>
+  <div class="section">
+    <div class="section-title">Secteurs d'activité</div>
+    <div class="section-sub">16 secteurs · 174 sous-secteurs — <a href="#" onclick="go('screen-segmentation');return false;" style="color:var(--green)">voir la segmentation complète</a></div>
+    <div class="sectors-grid">
+      <div class="sector-card" onclick="go('screen-results')"><span class="sector-icon">🏥</span><span class="sector-label">Santé</span><div class="sector-count-badge">27 métiers</div></div>
+      <div class="sector-card" onclick="go('screen-results')"><span class="sector-icon">🦷</span><span class="sector-label">Dentaire</span><div class="sector-count-badge">8 métiers</div></div>
+      <div class="sector-card" onclick="go('screen-results')"><span class="sector-icon">🚗</span><span class="sector-label">Auto & Moto</span><div class="sector-count-badge">16 métiers</div></div>
+      <div class="sector-card" onclick="go('screen-results')"><span class="sector-icon">✂️</span><span class="sector-label">Beauté</span><div class="sector-count-badge">15 métiers</div></div>
+      <div class="sector-card" onclick="go('screen-results')"><span class="sector-icon">💆</span><span class="sector-label">Bien-être</span><div class="sector-count-badge">14 métiers</div></div>
+      <div class="sector-card" onclick="go('screen-results')"><span class="sector-icon">🔧</span><span class="sector-label">Habitat</span><div class="sector-count-badge">20 métiers</div></div>
+      <div class="sector-card" onclick="go('screen-results')"><span class="sector-icon">⚖️</span><span class="sector-label">Juridique</span><div class="sector-count-badge">13 métiers</div></div>
+      <div class="sector-card" onclick="go('screen-results')"><span class="sector-icon">💶</span><span class="sector-label">Finance</span><div class="sector-count-badge">10 métiers</div></div>
+      <div class="sector-card" onclick="go('screen-results')"><span class="sector-icon">🏋️</span><span class="sector-label">Sport</span><div class="sector-count-badge">16 métiers</div></div>
+      <div class="sector-card" onclick="go('screen-results')"><span class="sector-icon">🐾</span><span class="sector-label">Vétérinaire</span><div class="sector-count-badge">10 métiers</div></div>
+      <div class="sector-card" onclick="go('screen-results')"><span class="sector-icon">👁️</span><span class="sector-label">Optique</span><div class="sector-count-badge">6 métiers</div></div>
+      <div class="sector-card" onclick="go('screen-results')"><span class="sector-icon">📚</span><span class="sector-label">Éducation</span><div class="sector-count-badge">13 métiers</div></div>
+      <div class="sector-card" onclick="go('screen-results')"><span class="sector-icon">🏠</span><span class="sector-label">Immobilier</span><div class="sector-count-badge">9 métiers</div></div>
+      <div class="sector-card" onclick="go('screen-results')"><span class="sector-icon">💻</span><span class="sector-label">Tech & Info</span><div class="sector-count-badge">12 métiers</div></div>
+      <div class="sector-card" onclick="go('screen-results')"><span class="sector-icon">🚐</span><span class="sector-label">Transport</span><div class="sector-count-badge">10 métiers</div></div>
+      <div class="sector-card" onclick="go('screen-segmentation')"><span class="sector-icon">🎉</span><span class="sector-label">Événementiel</span><div class="sector-count-badge">14 métiers</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== RESULTS ===== -->
+<div id="screen-results" class="screen">
+  <nav class="nav">
+    <div class="logo">rendez<span>Pro</span></div>
+    <button class="btn" onclick="go('screen-home')">← Accueil</button>
+  </nav>
+  <div class="results-header">
+    <div class="breadcrumb">Santé → <span>Dentiste</span> — <span style="color:var(--green)">📍 Paris 11e (0.4–2 km)</span></div>
+    <div class="subsectors-scroll">
+      <div class="sub-chip active">Dentiste</div>
+      <div class="sub-chip">Médecin généraliste</div>
+      <div class="sub-chip">Cardiologue</div>
+      <div class="sub-chip">Dermatologue</div>
+      <div class="sub-chip">Ophtalmologue</div>
+      <div class="sub-chip">ORL</div>
+      <div class="sub-chip">Gynécologue</div>
+      <div class="sub-chip">Pédiatre</div>
+      <div class="sub-chip">+ 19</div>
+    </div>
+    <div class="tabs-row">
+      <div class="tab active">📋 Liste</div>
+      <div class="tab">🗺️ Carte</div>
+    </div>
+  </div>
+  <div class="results-list">
+
+    <div class="pro-card" onclick="go('screen-pro-detail')">
+      <div class="pro-card-top">
+        <div class="pro-avatar" style="background:#E1F5EE">🦷</div>
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+            <span class="pro-name">Dr. Sophie Martin</span>
+            <span class="badge badge-verified">✓ Inscrit & vérifié</span>
+          </div>
+          <div class="pro-spec">Chirurgien-dentiste · Secteur 1</div>
+          <div class="pro-meta">
+            <span class="meta-item">📍 0.4 km</span>
+            <span class="meta-item">⭐ 4.8 (127 avis)</span>
+            <span class="meta-item green">● Disponible aujourd'hui</span>
+          </div>
+        </div>
+      </div>
+      <div class="dispo-row">
+        <div class="slot" onclick="selectSlotResult(event,'14h00')">14h00</div>
+        <div class="slot" onclick="selectSlotResult(event,'14h30')">14h30</div>
+        <div class="slot" onclick="selectSlotResult(event,'16h00')">16h00</div>
+        <div class="slot" onclick="selectSlotResult(event,'16h30')">16h30</div>
+        <div class="slot full">17h00 complet</div>
+      </div>
+    </div>
+
+    <div class="pro-card">
+      <div class="pro-card-top">
+        <div class="pro-avatar" style="background:#F1EFE8">🦷</div>
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+            <span class="pro-name">Dr. Karim Benali</span>
+            <span class="badge badge-unregistered">Non inscrit</span>
+          </div>
+          <div class="pro-spec">Chirurgien-dentiste</div>
+          <div class="pro-meta">
+            <span class="meta-item">📍 0.8 km</span>
+            <span class="meta-item">📞 Réservation par téléphone</span>
+          </div>
+        </div>
+      </div>
+      <div class="tel-line">
+        <span class="hours-text">🕐 Lun–Ven 9h–18h · Sam 9h–13h</span>
+      </div>
+      <div class="tel-line">
+        <a class="tel-link" href="tel:+33143000000">📞 01 43 XX XX XX — Appeler directement</a>
+      </div>
+    </div>
+
+    <div class="pro-card" onclick="go('screen-pro-detail')">
+      <div class="pro-card-top">
+        <div class="pro-avatar" style="background:#E1F5EE">🏥</div>
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+            <span class="pro-name">Cabinet Dentaire République</span>
+            <span class="badge badge-verified">✓ Inscrit & vérifié</span>
+          </div>
+          <div class="pro-spec">Cabinet dentaire · 3 praticiens</div>
+          <div class="pro-meta">
+            <span class="meta-item">📍 1.2 km</span>
+            <span class="meta-item">⭐ 4.6 (89 avis)</span>
+            <span class="meta-item amber">⚠ Prochain dispo demain</span>
+          </div>
+        </div>
+      </div>
+      <div class="dispo-row">
+        <div class="slot" onclick="selectSlotResult(event,'Demain 9h30')">Demain 9h30</div>
+        <div class="slot" onclick="selectSlotResult(event,'Demain 11h')">Demain 11h</div>
+        <div class="slot" onclick="selectSlotResult(event,'Demain 14h')">Demain 14h</div>
+      </div>
+    </div>
+
+    <div class="pro-card" onclick="go('screen-pro-detail')">
+      <div class="pro-card-top">
+        <div class="pro-avatar" style="background:#E6F1FB">🦷</div>
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+            <span class="pro-name">Dr. Amina Roussel</span>
+            <span class="badge badge-verified">✓ Inscrit & vérifié</span>
+          </div>
+          <div class="pro-spec">Orthodontiste · Secteur 2</div>
+          <div class="pro-meta">
+            <span class="meta-item">📍 1.5 km</span>
+            <span class="meta-item">⭐ 4.9 (203 avis)</span>
+            <span class="meta-item green">● Disponible cette semaine</span>
+          </div>
+        </div>
+      </div>
+      <div class="dispo-row">
+        <div class="slot" onclick="selectSlotResult(event,'Mer 10h')">Mer 10h</div>
+        <div class="slot" onclick="selectSlotResult(event,'Mer 15h30')">Mer 15h30</div>
+        <div class="slot" onclick="selectSlotResult(event,'Jeu 9h')">Jeu 9h</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== PRO DETAIL ===== -->
+<div id="screen-pro-detail" class="screen">
+  <nav class="nav">
+    <div class="logo">rendez<span>Pro</span></div>
+    <button class="btn" onclick="go('screen-results')">← Résultats</button>
+  </nav>
+  <div class="pro-detail-wrap">
+    <div class="pro-detail-header">
+      <div class="pro-detail-avatar" style="background:#E1F5EE">🦷</div>
+      <div>
+        <div class="pro-detail-name">Dr. Sophie Martin</div>
+        <div class="pro-detail-spec">Chirurgien-dentiste · Paris 11e</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <span class="badge badge-verified">✓ Profil vérifié</span>
+          <span style="font-size:13px;color:var(--text-sub)">⭐ 4.8 · 127 avis</span>
+        </div>
+      </div>
+    </div>
+    <div class="info-card">
+      <div class="info-row"><span class="info-label">Adresse</span><span class="info-value">14 rue de la Roquette, Paris 11e</span></div>
+      <div class="info-row"><span class="info-label">Téléphone</span><span class="info-value green">01 43 XX XX XX</span></div>
+      <div class="info-row"><span class="info-label">Horaires</span><span class="info-value">Lun–Ven 9h–18h</span></div>
+      <div class="info-row"><span class="info-label">Accès</span><span class="info-value">Métro Bastille · Ligne 1/5</span></div>
+      <div class="info-row"><span class="info-label">Secteur</span><span class="info-value">Secteur 1 — Conventionné</span></div>
+      <div class="info-row"><span class="info-label">Langues</span><span class="info-value">Français · Anglais · Arabe</span></div>
+    </div>
+    <div class="map-block">🗺️ Carte — 14 rue de la Roquette, Paris 11e</div>
+    <div class="section-h">Choisir un créneau</div>
+    <div class="section-sh">Les créneaux en vert sont disponibles en temps réel</div>
+    <div class="calendar-nav">
+      <button class="cal-arrow">‹</button>
+      <span class="cal-label">Dimanche 27 avril 2026</span>
+      <button class="cal-arrow">›</button>
+    </div>
+    <div class="time-grid" id="time-grid">
+      <div class="time-slot taken">9h00</div>
+      <div class="time-slot taken">9h30</div>
+      <div class="time-slot taken">10h00</div>
+      <div class="time-slot" onclick="pickSlot(this,'10h30')">10h30</div>
+      <div class="time-slot taken">11h00</div>
+      <div class="time-slot" onclick="pickSlot(this,'11h30')">11h30</div>
+      <div class="time-slot taken">14h00</div>
+      <div class="time-slot" onclick="pickSlot(this,'14h30')">14h30</div>
+      <div class="time-slot" onclick="pickSlot(this,'15h00')">15h00</div>
+      <div class="time-slot taken">15h30</div>
+      <div class="time-slot" onclick="pickSlot(this,'16h00')">16h00</div>
+      <div class="time-slot taken">16h30</div>
+    </div>
+    <div class="confirm-banner" id="slot-banner">✓ Créneau sélectionné : <strong id="slot-label"></strong></div>
+    <button class="confirm-btn" onclick="go('screen-confirm')">Confirmer le rendez-vous →</button>
+  </div>
+</div>
+
+<!-- ===== CONFIRM ===== -->
+<div id="screen-confirm" class="screen">
+  <nav class="nav">
+    <div class="logo">rendez<span>Pro</span></div>
+    <button class="btn" onclick="go('screen-pro-detail')">← Retour</button>
+  </nav>
+  <div style="padding:20px;max-width:520px;margin:0 auto">
+    <div class="section-h" style="margin-bottom:16px">Confirmer votre rendez-vous</div>
+    <div class="info-card" style="margin-bottom:20px">
+      <div class="info-row"><span class="info-label">Professionnel</span><span class="info-value">Dr. Sophie Martin</span></div>
+      <div class="info-row"><span class="info-label">Spécialité</span><span class="info-value">Chirurgien-dentiste</span></div>
+      <div class="info-row"><span class="info-label">Date</span><span class="info-value green">Dim. 27 avril 2026</span></div>
+      <div class="info-row"><span class="info-label">Heure</span><span class="info-value green" id="confirm-slot-display">14h30</span></div>
+      <div class="info-row"><span class="info-label">Adresse</span><span class="info-value">14 rue de la Roquette, 75011</span></div>
+    </div>
+    <div class="form-group"><label class="form-label">Votre nom complet</label><input class="form-input" type="text" placeholder="Jean Dupont"/></div>
+    <div class="form-group"><label class="form-label">Téléphone</label><input class="form-input" type="tel" placeholder="+33 6 XX XX XX XX"/></div>
+    <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" placeholder="jean@email.com"/></div>
+    <div class="form-group"><label class="form-label">Motif (optionnel)</label><input class="form-input" type="text" placeholder="Détartrage, urgence, consultation..."/></div>
+    <div class="info-banner" style="margin-bottom:16px">📧 Une confirmation sera envoyée par SMS et email. Le professionnel sera notifié immédiatement.</div>
+    <button class="confirm-btn" onclick="go('screen-success')">Valider le rendez-vous</button>
+  </div>
+</div>
+
+<!-- ===== SUCCESS ===== -->
+<div id="screen-success" class="screen">
+  <nav class="nav">
+    <div class="logo">rendez<span>Pro</span></div>
+    <button class="btn btn-primary" onclick="go('screen-home')">Accueil</button>
+  </nav>
+  <div class="success-wrap">
+    <div class="success-icon">✅</div>
+    <div class="success-title">Rendez-vous confirmé !</div>
+    <div class="success-sub">Dr. Sophie Martin · Dim. 27 avril à 14h30</div>
+    <div class="info-card" style="text-align:left;max-width:400px;margin:0 auto 24px">
+      <div class="info-row"><span class="info-label">Adresse</span><span class="info-value">14 rue de la Roquette, 75011</span></div>
+      <div class="info-row"><span class="info-label">Rappel SMS</span><span class="info-value green">24h avant</span></div>
+      <div class="info-row"><span class="info-label">Numéro de RDV</span><span class="info-value">#RDV-20260427</span></div>
+    </div>
+    <button class="confirm-btn" style="max-width:320px;background:var(--gray-700)" onclick="go('screen-home')">Revenir à l'accueil</button>
+  </div>
+</div>
+
+<!-- ===== PRO LOGIN ===== -->
+<div id="screen-pro-login" class="screen">
+  <nav class="nav">
+    <div class="logo">rendez<span>Pro</span></div>
+    <button class="btn" onclick="go('screen-home')">← Accueil</button>
+  </nav>
+  <div style="padding:20px;max-width:460px;margin:0 auto">
+    <div class="section-h" style="margin-bottom:6px">Espace professionnel</div>
+    <p style="font-size:14px;color:var(--text-sub);margin-bottom:24px">Gérez vos rendez-vous et votre agenda en ligne</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px">
+      <div class="pro-card" style="text-align:center;cursor:pointer" onclick="go('screen-pro-dashboard')">
+        <div style="font-size:32px;margin-bottom:10px">📅</div>
+        <div style="font-weight:600;margin-bottom:4px">Mon agenda</div>
+        <div style="font-size:12px;color:var(--text-sub)">Créneaux & disponibilités</div>
+      </div>
+      <div class="pro-card" style="text-align:center;cursor:pointer">
+        <div style="font-size:32px;margin-bottom:10px">👤</div>
+        <div style="font-weight:600;margin-bottom:4px">Mon profil</div>
+        <div style="font-size:12px;color:var(--text-sub)">Infos & services</div>
+      </div>
+    </div>
+    <div class="info-banner">
+      🏢 Votre établissement est peut-être déjà référencé dans notre annuaire public. En vous inscrivant gratuitement, vous activez la prise de RDV en ligne et gérez vos créneaux en temps réel.
+    </div>
+    <button class="confirm-btn" style="margin-top:16px" onclick="go('screen-register')">Inscrire mon établissement →</button>
+  </div>
+</div>
+
+<!-- ===== PRO DASHBOARD ===== -->
+<div id="screen-pro-dashboard" class="screen">
+  <nav class="nav">
+    <div class="logo">rendez<span>Pro</span></div>
+    <button class="btn" onclick="go('screen-pro-login')">← Retour</button>
+  </nav>
+  <div class="dashboard-wrap">
+    <div style="font-size:13px;color:var(--text-sub);margin-bottom:4px">Bienvenue</div>
+    <div class="section-h" style="margin-bottom:16px">Dr. Sophie Martin</div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-n" style="color:var(--green)">8</div><div class="stat-l">RDV aujourd'hui</div></div>
+      <div class="stat-card"><div class="stat-n" style="color:#BA7517">3</div><div class="stat-l">En attente</div></div>
+      <div class="stat-card"><div class="stat-n">34</div><div class="stat-l">Cette semaine</div></div>
+    </div>
+    <div class="section-h" style="margin-bottom:14px">Paramètres du jour</div>
+    <div class="info-card" style="padding:0 16px;margin-bottom:20px">
+      <div class="param-row">
+        <span>Max. RDV par créneau</span>
+        <div class="counter">
+          <button class="cnt-btn" onclick="changeRdv(-1)">−</button>
+          <span class="cnt-val" id="rdv-max">2</span>
+          <button class="cnt-btn" onclick="changeRdv(1)">+</button>
+        </div>
+      </div>
+      <div class="param-row">
+        <span>Durée par RDV</span>
+        <span style="font-weight:500">30 min</span>
+      </div>
+      <div class="param-row" style="border-bottom:none">
+        <span>Horaires ouverture</span>
+        <span style="color:var(--green);font-weight:500">09h00 – 18h00</span>
+      </div>
+    </div>
+    <div class="section-h" style="margin-bottom:12px">RDV d'aujourd'hui</div>
+    <div class="rdv-item">
+      <div><div class="rdv-time">14h00 — Jean Dupont</div><div class="rdv-name">Détartrage + consultation</div></div>
+      <span class="status-pill status-ok">Confirmé</span>
+    </div>
+    <div class="rdv-item">
+      <div><div class="rdv-time">14h30 — Marie Leroy</div><div class="rdv-name">Urgence dentaire</div></div>
+      <span class="status-pill status-wait">En attente</span>
+    </div>
+    <div class="rdv-item">
+      <div><div class="rdv-time">15h00 — Ahmed Sall</div><div class="rdv-name">Suivi traitement orthodontie</div></div>
+      <span class="status-pill status-ok">Confirmé</span>
+    </div>
+    <div class="rdv-item">
+      <div><div class="rdv-time">16h00 — Isabelle Moreau</div><div class="rdv-name">Extraction</div></div>
+      <span class="status-pill status-ok">Confirmé</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SEGMENTATION ===== -->
+<div id="screen-segmentation" class="screen">
+  <nav class="nav">
+    <div class="logo">rendez<span>Pro</span></div>
+    <button class="btn" onclick="go('screen-home')">← Accueil</button>
+  </nav>
+  <div class="seg-wrap">
+    <div class="section-h" style="margin-bottom:4px">Segmentation complète</div>
+    <p style="font-size:14px;color:var(--text-sub);margin-bottom:14px">16 secteurs · 174 sous-secteurs</p>
+    <input class="search-seg" id="seg-search" type="text" placeholder="Rechercher un secteur ou sous-secteur..." oninput="filterSeg(this.value)"/>
+    <div class="seg-stats">
+      <div class="stat-card"><div class="stat-n" id="seg-s-count">16</div><div class="stat-l">Secteurs</div></div>
+      <div class="stat-card"><div class="stat-n" id="seg-ss-count">174</div><div class="stat-l">Sous-secteurs</div></div>
+      <div class="stat-card"><div class="stat-n">2</div><div class="stat-l">Niveaux</div></div>
+    </div>
+    <div id="seg-container"></div>
+  </div>
+</div>
+
+<!-- ===== REGISTER ===== -->
+<div id="screen-register" class="screen">
+  <nav class="nav">
+    <div class="logo">rendez<span>Pro</span></div>
+    <button class="btn" onclick="go('screen-home')">← Accueil</button>
+  </nav>
+  <div class="register-wrap">
+    <div class="section-h" style="margin-bottom:6px">Créer un compte</div>
+    <p style="font-size:14px;color:var(--text-sub);margin-bottom:20px">Gratuit · Sans engagement</p>
+    <div class="reg-tabs">
+      <div class="reg-tab active" onclick="switchRegTab(this)">Utilisateur</div>
+      <div class="reg-tab" onclick="switchRegTab(this)">Professionnel</div>
+    </div>
+    <div class="form-group"><label class="form-label">Prénom et nom</label><input class="form-input" type="text" placeholder="Jean Dupont"/></div>
+    <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" placeholder="jean@email.com"/></div>
+    <div class="form-group"><label class="form-label">Téléphone</label><input class="form-input" type="tel" placeholder="+33 6 XX XX XX XX"/></div>
+    <div class="form-group"><label class="form-label">Code postal <span style="color:var(--text-hint)">(si géolocalisation désactivée)</span></label><input class="form-input" type="text" placeholder="75011"/></div>
+    <div class="info-banner" style="margin-bottom:16px">📍 Votre localisation est utilisée uniquement pour trouver les professionnels les plus proches.</div>
+    <button class="confirm-btn">Créer mon compte →</button>
+  </div>
+</div>
+
+<script>
+const SEG_DATA=[
+  {id:"sante",name:"Santé",icon:"🏥",bg:"#E1F5EE",cbg:"#9FE1CB",ctext:"#085041",subs:["Médecin généraliste","Dentiste","Cardiologue","Dermatologue","Ophtalmologue","Gynécologue","Pédiatre","Psychiatre","Psychologue","Orthopédiste","ORL","Gastro-entérologue","Endocrinologue","Rhumatologue","Neurologue","Oncologue","Pneumologue","Urologue","Radiologue","Médecin du sport","Homéopathe","Acupuncteur","Ostéopathe","Médecin urgentiste","Sage-femme","Infirmier à domicile","Médecin nutritionniste"]},
+  {id:"dentaire",name:"Dentaire",icon:"🦷",bg:"#E6F1FB",cbg:"#B5D4F4",ctext:"#0C447C",subs:["Chirurgien-dentiste","Orthodontiste","Parodontologue","Endodontiste","Implantologue","Prothésiste dentaire","Dentiste pédiatrique","Stomatologue"]},
+  {id:"auto",name:"Auto & Moto",icon:"🚗",bg:"#F1EFE8",cbg:"#D3D1C7",ctext:"#2C2C2A",subs:["Garagiste généraliste","Carrossier","Mécanicien moto","Contrôle technique","Électricien auto","Vitrier auto","Pneumaticien (pneus)","Dépanneur","Préparateur véhicule","Concessionnaire","Débosseleur","Réparateur diesel","Climatisation auto","Tuning / préparation","Valet parking","Nettoyage auto détailing"]},
+  {id:"beaute",name:"Beauté & Coiffure",icon:"✂️",bg:"#FBEAF0",cbg:"#F4C0D1",ctext:"#72243E",subs:["Coiffeur femmes","Coiffeur hommes","Barbier","Coloriste","Maquilleuse","Esthéticienne","Onglerie","Institut de beauté","Épilation laser","Dermatologue esthétique","Tatoueur","Perceur corporel","Extensions cils","Microblading (sourcils)","Bronzage / UV"]},
+  {id:"bienetre",name:"Bien-être & Spa",icon:"💆",bg:"#EEEDFE",cbg:"#CECBF6",ctext:"#3C3489",subs:["Masseur bien-être","Spa & hammam","Naturopathe","Sophrologue","Hypnothérapeute","Réflexologue","Énergéticien (reiki)","Chiropracteur","Podologue","Diététicien-nutritionniste","Coach de vie","Thérapeute de couple","Sexologue","Relaxologue"]},
+  {id:"habitat",name:"Habitat & Artisanat",icon:"🔧",bg:"#EAF3DE",cbg:"#C0DD97",ctext:"#27500A",subs:["Plombier","Électricien","Chauffagiste","Serrurier","Menuisier","Peintre en bâtiment","Carreleur","Maçon","Couvreur","Jardinier / paysagiste","Déménageur","Architecte d'intérieur","Décorateur intérieur","Nettoyage / conciergerie","Ramoneur","Expert en rénovation","Pisciniste","Alarme / sécurité","Installateur cuisine","Vitrier bâtiment"]},
+  {id:"juridique",name:"Juridique & Administratif",icon:"⚖️",bg:"#FAEEDA",cbg:"#FAC775",ctext:"#633806",subs:["Avocat droit de la famille","Avocat droit du travail","Avocat pénal","Avocat immobilier","Notaire","Huissier de justice","Expert-comptable","Commissaire de justice","Médiateur","Conseiller juridique","Avocat droit des affaires","Avocat droit fiscal","Juriste d'entreprise"]},
+  {id:"finance",name:"Finance & Assurance",icon:"💶",bg:"#EAF3DE",cbg:"#97C459",ctext:"#27500A",subs:["Conseiller bancaire","Conseiller en gestion de patrimoine","Courtier en prêt immobilier","Courtier en assurance","Conseiller retraite","Comptable","Conseiller en investissement","Analyste financier","Conseiller mutuelle","Gestionnaire de fonds"]},
+  {id:"sport",name:"Sport & Fitness",icon:"🏋️",bg:"#FAECE7",cbg:"#F5C4B3",ctext:"#712B13",subs:["Coach sportif personnel","Préparateur physique","Kiné du sport","Yoga","Pilates","Natation (cours)","Arts martiaux","Boxe","Danse","Escalade","Golf (cours)","Tennis (cours)","Équitation","Crossfit","Méditation / pleine conscience","Nutrition sportive"]},
+  {id:"veto",name:"Vétérinaire & Animaux",icon:"🐾",bg:"#E1F5EE",cbg:"#5DCAA5",ctext:"#085041",subs:["Vétérinaire généraliste","Vétérinaire urgentiste","Spécialiste animaux exotiques","Chirurgie vétérinaire","Comportementaliste animal","Toiletteur","Dresseur","Pension animaux","Ostéopathe animal","Acupuncteur vétérinaire"]},
+  {id:"optique",name:"Optique & Audition",icon:"👁️",bg:"#E6F1FB",cbg:"#85B7EB",ctext:"#0C447C",subs:["Opticien-lunetier","Orthoptiste","Ophtalmologue (vision)","Audioprothésiste","ORL audition","Spécialiste lentilles"]},
+  {id:"educ",name:"Éducation & Formation",icon:"📚",bg:"#EEEDFE",cbg:"#AFA9EC",ctext:"#3C3489",subs:["Soutien scolaire","Cours particuliers maths","Cours particuliers langues","Préparation bac / brevet","Cours musique","Cours dessin / arts","Orientation scolaire","Conseiller VAE","Coach reconversion","Formation professionnelle","Orthophoniste","Psychomotricien","Ergothérapeute"]},
+  {id:"immo",name:"Immobilier",icon:"🏠",bg:"#FAEEDA",cbg:"#EF9F27",ctext:"#412402",subs:["Agent immobilier vente","Agent immobilier location","Gestionnaire locatif","Diagnostiqueur immobilier","Expert en évaluation","Notaire immobilier","Home stager","Photographe immobilier","Chasseur d'appartement"]},
+  {id:"tech",name:"Tech & Informatique",icon:"💻",bg:"#E6F1FB",cbg:"#378ADD",ctext:"#042C53",subs:["Dépannage informatique","Développeur web (freelance)","Designer UX/UI","Technicien réseau","Réparateur smartphone","Expert cybersécurité","Formateur informatique","Consultant digital","Community manager","Expert SEO","Photographe","Vidéaste / monteur"]},
+  {id:"transport",name:"Transport & Mobilité",icon:"🚐",bg:"#F1EFE8",cbg:"#B4B2A9",ctext:"#444441",subs:["Auto-école","Moniteur code de la route","Taxi conventionné","Transport médicalisé (VSL)","Chauffeur VTC","Déménageur (planification)","Livreur express","Coursier moto","Garde d'enfants avec transport","Navette aéroport"]},
+  {id:"events",name:"Événementiel & Loisirs",icon:"🎉",bg:"#FBEAF0",cbg:"#ED93B1",ctext:"#4B1528",subs:["Photographe événements","Vidéaste mariage","Traiteur / chef à domicile","Organisation mariage","DJ / animateur","Fleuriste sur commande","Location de salle","Escape game","Guide touristique","Team building","Magicien / artiste","Cours de cuisine","Atelier créatif","Karting / sport loisir"]}
+];
+
+function go(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+  if(id==='screen-segmentation') renderSeg(SEG_DATA,'');
+}
+
+function useLocation(){
+  document.getElementById('loc-label').textContent='Paris 11e ✓';
+}
+
+function selectSlotResult(e,t){
+  e.stopPropagation();
+  document.getElementById('confirm-slot-display').textContent=t;
+  go('screen-confirm');
+}
+
+let selectedSlot=null;
+function pickSlot(el,t){
+  document.querySelectorAll('#time-grid .time-slot:not(.taken)').forEach(s=>s.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedSlot=t;
+  const b=document.getElementById('slot-banner');
+  b.style.display='block';
+  document.getElementById('slot-label').textContent=t+' — Dr. Sophie Martin';
+  document.getElementById('confirm-slot-display').textContent=t;
+}
+
+let rdvMax=2;
+function changeRdv(d){
+  rdvMax=Math.max(1,Math.min(10,rdvMax+d));
+  document.getElementById('rdv-max').textContent=rdvMax;
+}
+
+function switchRegTab(el){
+  el.parentNode.querySelectorAll('.reg-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function renderSeg(data,query){
+  const c=document.getElementById('seg-container');
+  c.innerHTML='';
+  let vs=0,vss=0;
+  data.forEach(s=>{
+    const q=query.toLowerCase();
+    const sm=s.name.toLowerCase().includes(q);
+    const fsubs=q?s.subs.filter(x=>x.toLowerCase().includes(q)||sm):s.subs;
+    if(q&&!sm&&fsubs.length===0)return;
+    vs++;vss+=fsubs.length;
+    const isOpen=q?'open':'';
+    const div=document.createElement('div');
+    div.className='seg-block';
+    div.innerHTML=`<div class="seg-header" onclick="toggleSeg(this)">
+      <div class="seg-icon" style="background:${s.bg}">${s.icon}</div>
+      <span class="seg-name">${s.name}</span>
+      <span class="seg-count" style="background:${s.cbg};color:${s.ctext}">${fsubs.length} métiers</span>
+      <span class="chevron ${isOpen}">▶</span>
+    </div>
+    <div class="subsectors-panel ${isOpen}">
+      <div class="sub-grid">${fsubs.map(x=>`<div class="sub-pill ${q&&x.toLowerCase().includes(q)?'hl':''}">${x}</div>`).join('')}</div>
+    </div>`;
+    c.appendChild(div);
+  });
+  if(vs===0) c.innerHTML=`<div style="text-align:center;padding:30px;color:var(--text-sub);font-size:14px">Aucun résultat pour "${query}"</div>`;
+  document.getElementById('seg-s-count').textContent=vs;
+  document.getElementById('seg-ss-count').textContent=vss;
+}
+
+function toggleSeg(h){
+  h.querySelector('.chevron').classList.toggle('open');
+  h.nextElementSibling.classList.toggle('open');
+}
+
+function filterSeg(v){renderSeg(SEG_DATA,v);}
+</script>
+</body>
+</html>
